@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><title>Ventes Pokémon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Ventes Pokémon"><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{--bg:#f4f6fb;--card:#fff;--text:#0f172a;--muted:#64748b;--accent:#2563eb;--soft:#dbeafe;--border:#e2e8f0;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--accent:#60a5fa;--soft:#1e3a5f;--border:#334155}}
+:root[data-theme="dark"]{--bg:#0f172a;--card:#1e293b;--text:#f1f5f9;--muted:#94a3b8;--accent:#60a5fa;--soft:#1e3a5f;--border:#334155}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+main{max-width:520px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:24px;margin:6px 0 12px}h2{font-size:17px;margin:20px 0 8px}
+.bar{display:flex;gap:8px}
+input{flex:1;min-width:0;font-size:17px;padding:13px;border-radius:14px;border:2px solid var(--border);background:var(--card);color:var(--text);outline:none;font-family:inherit}
+input:focus{border-color:var(--accent)}
+button{font-family:inherit;font-size:16px;font-weight:600;border:0;border-radius:14px;cursor:pointer}
+#go{background:var(--accent);color:#fff;padding:0 18px}
+.item{display:flex;gap:12px;align-items:center;width:100%;text-align:left;background:var(--card);color:var(--text);border:1px solid var(--border);padding:10px;margin-top:10px;border-radius:16px}
+.item img{width:56px;height:78px;object-fit:contain;border-radius:6px;background:var(--bg)}
+.item small,.msg,.note{color:var(--muted);font-size:14px}.msg{text-align:center;margin:24px 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-top:12px}
+.head{display:flex;gap:14px}.head img{width:110px;border-radius:8px}
+.back{background:var(--border);color:var(--text);padding:9px 14px;margin-bottom:6px}
+.big{font-size:30px;font-weight:700;color:var(--accent)}
+.b{display:grid;grid-template-columns:78px 1fr 70px;gap:8px;align-items:center;font-size:14px;margin:6px 0}
+.b i{display:block;height:10px;border-radius:5px;background:var(--accent)}.b span:last-child{text-align:right;font-weight:600}
+.lk{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lk a{display:block;text-align:center;text-decoration:none;background:var(--soft);color:var(--text);padding:12px 6px;border-radius:12px;font-size:14px;font-weight:600}
+.ls{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--border);text-decoration:none;color:var(--text);font-size:14px}
+.ls img{width:44px;height:44px;object-fit:cover;border-radius:6px}.ls b{margin-left:auto;white-space:nowrap}
+svg{width:100%;height:auto}
+</style></head><body><main>
+<h1>Ventes Pokémon</h1>
+<div class="bar"><input id="q" placeholder="Ex : Arcanin 2/147" enterkeyhint="search" autocomplete="off"><button id="go">OK</button></div>
+<div id="list"></div><div id="detail" hidden></div>
+</main>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const eur=n=>n==null?'—':Number(n).toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+async function api(p){const r=await fetch(p);if(!r.ok)throw new Error(r.status);return r.json()}
+let cards=[];
+async function go(){const q=$('#q').value.trim();if(!q)return;$('#detail').hidden=true;$('#list').hidden=false;$('#list').innerHTML='<p class="msg">Recherche…</p>';
+ try{cards=await api('/api/search?q='+encodeURIComponent(q))}catch(e){$('#list').innerHTML='<p class="msg">Erreur : serveur ou réseau indisponible.</p>';return}
+ if(!cards.length){$('#list').innerHTML='<p class="msg">Aucune carte trouvée.</p>';return}
+ $('#list').innerHTML=cards.map((c,i)=>`<button class="item" data-i="${i}"><img src="${esc(c.image)}" alt=""><div><b>${esc(c.name)}</b><br><small>${esc(c.set)} · ${esc(c.number)}/${esc(c.total)}<br>${esc(c.rarity||'')}</small></div><b style="margin-left:auto">${eur(c.pricing&&(c.pricing.trend!=null?c.pricing.trend:c.pricing.avg))}</b></button>`).join('')}
+function links(q){const e=encodeURIComponent(q);return[['Cardmarket','https://www.cardmarket.com/fr/Pokemon/Products/Search?searchString='+e],['eBay – vendus','https://www.ebay.fr/sch/i.html?_nkw='+e+'&LH_Sold=1&LH_Complete=1'],['eBay – en vente','https://www.ebay.fr/sch/i.html?_nkw='+e],['Leboncoin','https://www.leboncoin.fr/recherche?text='+e],['Vinted','https://www.vinted.fr/catalog?search_text='+e],['Whatnot','https://www.whatnot.com/search?query='+e],['Facebook Marketplace','https://www.facebook.com/marketplace/search/?query='+e],['PSA – enchères','https://www.psacard.com/auctionprices/search?q='+e],['GCC / VOGGT / PCA','https://www.google.com/search?q='+encodeURIComponent(q+' GCC Marketplace OR VOGGT OR PCA')]]}
+function snap(c){const k='snap:'+c.id;let s=[];try{s=JSON.parse(localStorage.getItem(k)||'[]');const v=c.pricing&&(c.pricing.trend!=null?c.pricing.trend:c.pricing.avg);if(v!=null&&(!s.length||Date.now()-s[s.length-1].t>12*36e5)){s.push({t:Date.now(),v});localStorage.setItem(k,JSON.stringify(s.slice(-400)))}}catch(e){}return s}
+function chart(s){if(s.length<2)return'<p class="note">La courbe se construit à chaque visite de cette carte (1 point toutes les 12 h). Reviens régulièrement.</p>';
+ const W=320,H=130,P=8,vs=s.map(x=>x.v),mn=Math.min(...vs),mx=Math.max(...vs),t0=s[0].t,t1=s[s.length-1].t;
+ const pts=s.map(x=>[P+(W-2*P)*(x.t-t0)/((t1-t0)||1),H-P-(H-2*P)*((x.v-mn)/((mx-mn)||1))]);
+ const d=n=>new Date(n).toLocaleDateString('fr-FR',{day:'2-digit',month:'short'});
+ return`<svg viewBox="0 0 ${W} ${H+16}"><polyline fill="none" stroke="var(--accent)" stroke-width="3" stroke-linejoin="round" points="${pts.map(p=>p.join(',')).join(' ')}"/><text x="${P}" y="${H+12}" font-size="10" fill="var(--muted)">${d(t0)} · ${eur(vs[0])}</text><text x="${W-P}" y="${H+12}" font-size="10" text-anchor="end" fill="var(--muted)">${d(t1)} · ${eur(vs[vs.length-1])}</text></svg>`}
+function bars(p,sfx,title){if(!p||p['trend'+sfx]==null&&p['avg'+sfx]==null)return'';
+ const r=[['Tendance','trend'],['Moy. 1 j','avg1'],['Moy. 7 j','avg7'],['Moy. 30 j','avg30'],['Plus bas','low']].map(([l,k])=>[l,p[k+sfx]]).filter(x=>x[1]!=null),mx=Math.max(...r.map(x=>x[1]),.01);
+ return`<h2>${title}</h2>`+r.map(([l,v])=>`<div class="b"><span>${l}</span><span><i style="width:${Math.max(3,100*v/mx)}%"></i></span><span>${eur(v)}</span></div>`).join('')}
+async function open(i){const c=cards[i],q=`${c.name} ${c.number}/${c.total}`,p=c.pricing;$('#list').hidden=true;const D=$('#detail');D.hidden=false;
+ D.innerHTML=`<button class="back" id="bk">← Retour</button><div class="card head"><img src="${esc(c.image)}" alt=""><div><b>${esc(c.name)}</b><br><small>${esc(c.set)}<br>${esc(c.number)}/${esc(c.total)} · ${esc(c.rarity||'')}</small><div class="big">${eur(p&&(p.trend!=null?p.trend:p.avg))}</div><small>Tendance Cardmarket${p&&p.updated?' · maj '+new Date(p.updated).toLocaleDateString('fr-FR'):''}</small></div></div>
+ <div class="card">${p?bars(p,'','Prix Cardmarket (normale)')+bars(p,'-holo','Prix Cardmarket (holo)'):'<p class="note">Pas de prix Cardmarket pour cette carte.</p>'}<h2>Évolution suivie sur ton téléphone</h2>${chart(snap(c))}</div>
+ <div class="card"><h2 style="margin-top:0">En vente sur eBay</h2><div id="eb"><p class="note">Chargement…</p></div></div>
+ <div class="card"><h2 style="margin-top:0">Voir les ventes / annonces</h2><div class="lk">${links(q).map(([n,u])=>`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(n)}</a>`).join('')}</div></div>`;
+ $('#bk').onclick=()=>{D.hidden=true;$('#list').hidden=false};scrollTo(0,0);
+ try{const e=await api('/api/ebay?q='+encodeURIComponent(q+' pokemon'));$('#eb').innerHTML=!e.enabled?'<p class="note">eBay n\'est pas connecté (clés à ajouter sur le serveur).</p>':e.items.length?e.items.map(x=>`<a class="ls" href="${esc(x.url)}" target="_blank" rel="noopener">${x.image?`<img src="${esc(x.image)}" alt="">`:''}<span>${esc(x.title)}<br><small>${esc(x.country||'')}</small></span><b>${eur(x.price)}</b></a>`).join(''):'<p class="note">Aucune annonce trouvée.</p>'}catch(x){$('#eb').innerHTML='<p class="note">eBay indisponible.</p>'}}
+$('#go').onclick=go;$('#q').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+$('#list').addEventListener('click',e=>{const b=e.target.closest('.item');if(b)open(+b.dataset.i)});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script></body></html>
